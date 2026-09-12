@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anime Tier List &amp; Journey Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #0e0e16;
+    --panel: #17171f;
+    --card: #1c1c27;
+    --card-border: #2c2c3a;
+    --text: #f1efe6;
+    --muted: #9393a6;
+
+    --s: #ff3b5c;
+    --a: #ff8a3d;
+    --b: #ffd23d;
+    --c: #4cd97b;
+    --d: #3da5ff;
+    --f: #b26bff;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 0) 0 0/22px 22px,
+      var(--ink);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    padding:40px 24px 80px;
+  }
+
+  header{
+    max-width:1040px;
+    margin:0 auto 36px;
+  }
+
+  .kicker{
+    font-family:'Archivo Black',sans-serif;
+    font-size:clamp(2rem, 5vw, 3.2rem);
+    letter-spacing:-0.01em;
+    line-height:1;
+    margin:0;
+  }
+  .kicker span{
+    background:linear-gradient(90deg,var(--s),var(--a),var(--b),var(--c),var(--d),var(--f));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  header p{
+    margin:12px 0 0;
+    color:var(--muted);
+    font-size:0.98rem;
+    max-width:520px;
+  }
+
+  .save-status{
+    font-size:0.78rem;
+    color:var(--c);
+    min-height:1.2em;
+    letter-spacing:0.01em;
+  }
+
+  .board{
+    max-width:1040px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .tier-row{
+    display:flex;
+    min-height:140px;
+    border-radius:10px;
+    overflow:hidden;
+    background:var(--panel);
+    border:1px solid var(--card-border);
+  }
+
+  .tier-label{
+    flex:0 0 92px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Archivo Black',sans-serif;
+    font-size:2.4rem;
+    color:#12121a;
+  }
+
+  .tier-row[data-tier="S"] .tier-label{background:var(--s);}
+  .tier-row[data-tier="A"] .tier-label{background:var(--a);}
+  .tier-row[data-tier="B"] .tier-label{background:var(--b);}
+  .tier-row[data-tier="C"] .tier-label{background:var(--c);}
+  .tier-row[data-tier="D"] .tier-label{background:var(--d);}
+  .tier-row[data-tier="F"] .tier-label{background:var(--f);}
+
+  .drop-zone{
+    flex:1;
+    display:flex;
+    flex-wrap:wrap;
+    align-content:flex-start;
+    gap:10px;
+    padding:12px;
+    transition:background 0.15s ease;
+  }
+
+  .drop-zone.drag-over{
+    background:rgba(255,255,255,0.05);
+  }
+
+  .drop-zone.empty::before{
+    content:attr(data-empty-label);
+    color:var(--muted);
+    font-size:0.85rem;
+    align-self:center;
+    padding:4px 2px;
+  }
+
+  .bench{
+    max-width:1040px;
+    margin:44px auto 0;
+  }
+
+  .bench-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .bench h2{
+    font-family:'Archivo Black',sans-serif;
+    font-size:1.1rem;
+    margin:0;
+    color:var(--muted);
+    font-weight:400;
+    letter-spacing:0.01em;
+  }
+
+  .btn-primary {
+    background: var(--d);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+
+  .bench .drop-zone{
+    background:var(--panel);
+    border:1px dashed var(--card-border);
+    border-radius:10px;
+    min-height:140px;
+    padding:14px;
+  }
+
+  .card{
+    width:110px;
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:8px;
+    padding:6px;
+    cursor:grab;
+    user-select:none;
+    transition:border-color 0.12s ease, transform 0.12s ease;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .card:hover{
+    border-color:#454558;
+    transform: translateY(-2px);
+  }
+
+  .card.dragging{
+    opacity:0.35;
+  }
+
+  .card-image{
+    position:relative;
+    width:100%;
+    height:130px;
+    border-radius:6px;
+    overflow:hidden;
+    background:rgba(255,255,255,0.035);
+  }
+
+  .card-image .poster{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
+  .card-delete {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+
+  .card:hover .card-delete {
+    opacity: 1;
+  }
+
+  .card-title{
+    font-size:0.78rem;
+    font-weight:600;
+    line-height:1.2;
+    margin:6px 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-genre{
+    font-size:0.65rem;
+    color:var(--muted);
+    margin:0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-progress{
+    display:block;
+    margin-top:4px;
+    padding:2px 4px;
+    border-radius:4px;
+    font-size:0.6rem;
+    font-weight:600;
+    text-align: center;
+  }
+
+  .card-progress.watching{
+    background:rgba(61,165,255,0.16);
+    color:#8cc6ff;
+  }
+
+  .card-progress.completed{
+    background:rgba(76,217,123,0.16);
+    color:#8fe6ab;
+  }
+
+  @media (max-width:600px){
+    .tier-label{flex-basis:64px; font-size:1.7rem;}
+    .card{width:95px;}
+    .card-image{height:110px;}
+  }
+
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(8,8,13,0.7);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:100;
+  }
+
+  .modal-overlay[hidden]{
+    display:none;
+  }
+
+  .modal-panel{
+    width:100%;
+    max-width:380px;
+    background:var(--panel);
+    border:1px solid var(--card-border);
+    border-radius:12px;
+    padding:22px;
+  }
+
+  .modal-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+  }
+
+  .modal-title{
+    font-size:1.05rem;
+    font-weight:700;
+    line-height:1.3;
+    margin:0;
+  }
+
+  .modal-close{
+    flex:0 0 auto;
+    width:26px;
+    height:26px;
+    border-radius:6px;
+    border:1px solid var(--card-border);
+    background:transparent;
+    color:var(--muted);
+    font-size:0.9rem;
+    cursor:pointer;
+    line-height:1;
+  }
+
+  .modal-close:hover{
+    color:var(--text);
+    border-color:#454558;
+  }
+
+  .field-group{
+    margin-bottom:16px;
+  }
+
+  .field-label{
+    display:block;
+    font-size:0.72rem;
+    color:var(--muted);
+    margin-bottom:7px;
+    letter-spacing:0.01em;
+  }
+
+  .status-toggle{
+    display:flex;
+    gap:8px;
+  }
+
+  .status-toggle button{
+    flex:1;
+    padding:8px 0;
+    border-radius:7px;
+    border:1px solid var(--card-border);
+    background:var(--card);
+    color:var(--muted);
+    font-size:0.82rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+  }
+
+  .status-toggle button.active[data-status="watching"]{
+    border-color:var(--d);
+    color:#8cc6ff;
+    background:rgba(61,165,255,0.1);
+  }
+
+  .status-toggle button.active[data-status="completed"]{
+    border-color:var(--c);
+    color:#8fe6ab;
+    background:rgba(76,217,123,0.1);
+  }
+
+  .field-row{
+    display:flex;
+    gap:10px;
+  }
+
+  .field-row .field-group{
+    flex:1;
+  }
+
+  .modal-panel input[type="text"],
+  .modal-panel input[type="number"],
+  .modal-panel input[type="date"]{
+    width:100%;
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:7px;
+    padding:8px 9px;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:0.85rem;
+  }
+
+  .modal-panel input:focus{
+    outline:none;
+    border-color:#454558;
+  }
+
+  .modal-status{
+    font-size:0.75rem;
+    color:var(--c);
+    min-height:1.1em;
+    margin-top:4px;
+  }
+
+  .search-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .search-results {
+    max-height: 220px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .search-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px;
+    background: var(--card);
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+
+  .search-item:hover {
+    border-color: var(--d);
+  }
+
+  .search-item img {
+    width: 36px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .search-item-info {
+    flex: 1;
+  }
+
+  .search-item-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .search-item-tags {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin: 2px 0 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 class="kicker">YOUR <span>ANIME</span> TIER LIST</h1>
+  <p>Drag any show into a tier to rank it. Click "+ Add New" to search and add anime to your list.</p>
+  <p id="save-status" class="save-status"></p>
+</header>
+
+<main class="board">
+  <div class="tier-row" data-tier="S">
+    <div class="tier-label">S</div>
+    <div class="drop-zone" data-tier="S" data-empty-label="Drop your all-time favorites here"></div>
+  </div>
+  <div class="tier-row" data-tier="A">
+    <div class="tier-label">A</div>
+    <div class="drop-zone" data-tier="A" data-empty-label="Drop great shows here"></div>
+  </div>
+  <div class="tier-row" data-tier="B">
+    <div class="tier-label">B</div>
+    <div class="drop-zone" data-tier="B" data-empty-label="Drop good shows here"></div>
+  </div>
+  <div class="tier-row" data-tier="C">
+    <div class="tier-label">C</div>
+    <div class="drop-zone" data-tier="C" data-empty-label="Drop okay shows here"></div>
+  </div>
+  <div class="tier-row" data-tier="D">
+    <div class="tier-label">D</div>
+    <div class="drop-zone" data-tier="D" data-empty-label="Drop weak shows here"></div>
+  </div>
+  <div class="tier-row" data-tier="F">
+    <div class="tier-label">F</div>
+    <div class="drop-zone" data-tier="F" data-empty-label="Drop the ones you regret here"></div>
+  </div>
+</main>
+
+<section class="bench">
+  <div class="bench-header">
+    <h2>Unranked shows</h2>
+    <button class="btn-primary" id="btn-open-add">+ Add New</button>
+  </div>
+  <div class="drop-zone" id="unranked-zone" data-tier="unranked" data-empty-label="Nothing left — everything's been ranked"></div>
+</section>
+
+<!-- Progress Modal -->
+<div class="modal-overlay" id="modal-overlay" hidden>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title">Show title</h2>
+      <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+    </div>
+
+    <div class="field-group">
+      <span class="field-label">Status</span>
+      <div class="status-toggle">
+        <button type="button" data-status="watching" id="status-watching">Watching</button>
+        <button type="button" data-status="completed" id="status-completed">Completed</button>
+      </div>
+    </div>
+
+    <div class="field-row" id="season-episode-row">
+      <div class="field-group">
+        <label class="field-label" for="input-season">Season</label>
+        <input type="number" id="input-season" min="1" placeholder="1">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="input-episode">Episode</label>
+        <input type="number" id="input-episode" min="1" placeholder="1">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label" for="input-start">Start date</label>
+        <input type="date" id="input-start">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="input-finish">Finish date</label>
+        <input type="date" id="input-finish">
+      </div>
+    </div>
+
+    <p class="modal-status" id="modal-status"></p>
+  </div>
+</div>
+
+<!-- Search & Add Modal -->
+<div class="modal-overlay" id="add-modal-overlay" hidden>
+  <div class="modal-panel" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2 class="modal-title">Search Anime</h2>
+      <button class="modal-close" id="add-modal-close" aria-label="Close">✕</button>
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="anime-search-input" placeholder="e.g. Naruto, Frieren...">
+      <button class="btn-primary" id="btn-search">Search</button>
+    </div>
+
+    <div class="search-results" id="search-results"></div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'anime_tier_list_data';
+  const dropZones = document.querySelectorAll('.drop-zone');
+  
+  let animeStore = {}; 
+  let progressStore = {}; 
+  let rankingsStore = {}; 
+
+  let draggedCard = null;
+  let suppressClick = false;
+  let activeCardId = null;
+
+  function initCardEvents(card) {
+    card.addEventListener('dragstart', () => {
+      draggedCard = card;
+      suppressClick = true;
+      card.classList.add('dragging');
+    });
+    
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      draggedCard = null;
+      updateEmptyStates();
+      setTimeout(() => { suppressClick = false; }, 50);
+    });
+    
+    card.addEventListener('click', e => {
+      if (suppressClick || e.target.classList.contains('card-delete')) return;
+      openModal(card.dataset.id);
+    });
+
+    const deleteBtn = card.querySelector('.card-delete');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeAnime(card.dataset.id);
+      });
+    }
+  }
+
+  dropZones.forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      zone.classList.add('drag-over');
+    });
+    zone.addEventListener('dragleave', () => {
+      zone.classList.remove('drag-over');
+    });
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      if (draggedCard) {
+        zone.appendChild(draggedCard);
+        updateEmptyStates();
+        saveState();
+      }
+    });
+  });
+
+  function updateEmptyStates(){
+    dropZones.forEach(zone => {
+      zone.classList.toggle('empty', zone.children.length === 0);
+    });
+  }
+
+  function createAnimeCard(anime) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.draggable = true;
+    card.dataset.id = anime.id;
+
+    card.innerHTML = `
+      <div class="card-image">
+        <img class="poster" src="${anime.image}" alt="${anime.title}">
+        <button class="card-delete" title="Remove Anime">✕</button>
+      </div>
+      <p class="card-title" title="${anime.title}">${anime.title}</p>
+      <p class="card-genre" title="${anime.genres}">${anime.genres}</p>
+      <p class="card-progress" hidden></p>
+    `;
+
+    initCardEvents(card);
+    return card;
+  }
+
+  function renderAnime(anime, tier = 'unranked') {
+    const card = createAnimeCard(anime);
+    const targetZone = document.querySelector(`.drop-zone[data-tier="${tier}"]`) || document.getElementById('unranked-zone');
+    targetZone.appendChild(card);
+    updateBadge(anime.id);
+  }
+
+  function removeAnime(id) {
+    delete animeStore[id];
+    delete progressStore[id];
+    delete rankingsStore[id];
+    const card = document.querySelector(`.card[data-id="${id}"]`);
+    if (card) card.remove();
+    updateEmptyStates();
+    saveState();
+  }
+
+  const addModalOverlay = document.getElementById('add-modal-overlay');
+  const searchInput = document.getElementById('anime-search-input');
+  const searchResults = document.getElementById('search-results');
+
+  document.getElementById('btn-open-add').addEventListener('click', () => {
+    addModalOverlay.hidden = false;
+    searchInput.focus();
+  });
+
+  document.getElementById('add-modal-close').addEventListener('click', () => {
+    addModalOverlay.hidden = true;
+  });
+
+  document.getElementById('btn-search').addEventListener('click', executeSearch);
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') executeSearch();
+  });
+
+  async function executeSearch() {
+    const query = searchInput.value.trim();
+    if (!query) return;
+
+    searchResults.innerHTML = '<p style="font-size:0.8rem; color:var(--muted);">Searching API...</p>';
+
+    try {
+      const res = await fetch(`https://kitsu.io/api/edge/anime?filter[text]=${encodeURIComponent(query)}&page[limit]=5`);
+      const data = await res.json();
+      
+      searchResults.innerHTML = '';
+      if (!data.data || data.data.length === 0) {
+        searchResults.innerHTML = '<p style="font-size:0.8rem; color:var(--muted);">No results found.</p>';
+        return;
+      }
+
+      for (const anime of data.data) {
+        const title = anime.attributes.canonicalTitle || anime.attributes.titles.en || 'Unknown Title';
+        const poster = anime.attributes.posterImage?.small || anime.attributes.posterImage?.original || '';
+        
+        let genres = 'Anime';
+        try {
+          if (anime.relationships?.categories?.links?.related) {
+            const catRes = await fetch(anime.relationships.categories.links.related);
+            const catData = await catRes.json();
+            if (catData.data && catData.data.length) {
+              genres = catData.data.slice(0, 3).map(c => c.attributes.title).join(', ');
+            }
+          }
+        } catch (e) {
+          // Fallback if category fetching fails
+        }
+
+        const item = document.createElement('div');
+        item.className = 'search-item';
+
+        item.innerHTML = `
+          <img src="${poster}" alt="${title}">
+          <div class="search-item-info">
+            <p class="search-item-title">${title}</p>
+            <p class="search-item-tags">${genres}</p>
+          </div>
+        `;
+
+        item.addEventListener('click', () => {
+          const animeObj = {
+            id: 'kitsu_' + anime.id,
+            title: title,
+            image: poster,
+            genres: genres
+          };
+
+          if (!animeStore[animeObj.id]) {
+            animeStore[animeObj.id] = animeObj;
+            renderAnime(animeObj, 'unranked');
+            saveState();
+          }
+
+          addModalOverlay.hidden = true;
+          searchInput.value = '';
+          searchResults.innerHTML = '';
+        });
+
+        searchResults.appendChild(item);
+      }
+
+    } catch (err) {
+      console.error(err);
+      searchResults.innerHTML = '<p style="font-size:0.8rem; color:var(--s);">Error fetching data from API.</p>';
+    }
+  }
+
+  const overlay = document.getElementById('modal-overlay');
+  const modalTitle = document.getElementById('modal-title');
+  const statusButtons = {
+    watching: document.getElementById('status-watching'),
+    completed: document.getElementById('status-completed'),
+  };
+  const seasonInput = document.getElementById('input-season');
+  const episodeInput = document.getElementById('input-episode');
+  const startInput = document.getElementById('input-start');
+  const finishInput = document.getElementById('input-finish');
+  const seasonEpisodeRow = document.getElementById('season-episode-row');
+
+  function getProgress(cardId){
+    return progressStore[cardId] || { status: null, season: '', episode: '', start: '', finish: '' };
+  }
+
+  function openModal(cardId){
+    activeCardId = cardId;
+    const anime = animeStore[cardId];
+    if (!anime) return;
+    
+    const progress = getProgress(cardId);
+
+    modalTitle.textContent = anime.title;
+    setActiveStatus(progress.status);
+    seasonInput.value = progress.season || '';
+    episodeInput.value = progress.episode || '';
+    startInput.value = progress.start || '';
+    finishInput.value = progress.finish || '';
+
+    overlay.hidden = false;
+  }
+
+  function closeModal(){
+    overlay.hidden = true;
+    activeCardId = null;
+  }
+
+  function setActiveStatus(status){
+    Object.entries(statusButtons).forEach(([key, btn]) => {
+      btn.classList.toggle('active', key === status);
+    });
+    seasonEpisodeRow.hidden = status === 'completed';
+  }
+
+  function updateActiveProgress(patch){
+    if (!activeCardId) return;
+    const current = getProgress(activeCardId);
+    progressStore[activeCardId] = { ...current, ...patch };
+    updateBadge(activeCardId);
+    saveState();
+  }
+
+  statusButtons.watching.addEventListener('click', () => {
+    const current = getProgress(activeCardId).status;
+    const next = current === 'watching' ? null : 'watching';
+    setActiveStatus(next);
+    updateActiveProgress({ status: next });
+  });
+
+  statusButtons.completed.addEventListener('click', () => {
+    const current = getProgress(activeCardId).status;
+    const next = current === 'completed' ? null : 'completed';
+    setActiveStatus(next);
+    updateActiveProgress({ status: next });
+  });
+
+  seasonInput.addEventListener('input', () => updateActiveProgress({ season: seasonInput.value }));
+  episodeInput.addEventListener('input', () => updateActiveProgress({ episode: episodeInput.value }));
+  startInput.addEventListener('change', () => updateActiveProgress({ start: startInput.value }));
+  finishInput.addEventListener('change', () => updateActiveProgress({ finish: finishInput.value }));
+
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (!overlay.hidden) closeModal();
+      if (!addModalOverlay.hidden) addModalOverlay.hidden = true;
+    }
+  });
+
+  function updateBadge(cardId){
+    const card = document.querySelector('.card[data-id="' + cardId + '"]');
+    if (!card) return;
+    const badge = card.querySelector('.card-progress');
+    const progress = getProgress(cardId);
+
+    if (!progress.status) {
+      badge.hidden = true;
+      badge.textContent = '';
+      badge.classList.remove('watching', 'completed');
+      return;
+    }
+
+    const label = progress.status === 'watching' ? 'Watching' : 'Completed';
+    let text = label;
+    if (progress.status === 'watching' && (progress.season || progress.episode)) {
+      const s = progress.season || '1';
+      const e = progress.episode || '?';
+      text = `S${s} E${e}`;
+    }
+
+    badge.textContent = text;
+    badge.hidden = false;
+    badge.classList.toggle('watching', progress.status === 'watching');
+    badge.classList.toggle('completed', progress.status === 'completed');
+  }
+
+  function showSaveStatus(text){
+    const el = document.getElementById('save-status');
+    if (!el) return;
+    el.textContent = text;
+    setTimeout(() => { if (el.textContent === text) el.textContent = ''; }, 1500);
+  }
+
+  function saveState(){
+    const rankings = {};
+    dropZones.forEach(zone => {
+      const tier = zone.dataset.tier;
+      zone.querySelectorAll('.card').forEach(card => {
+        rankings[card.dataset.id] = tier;
+      });
+    });
+
+    const payload = {
+      anime: animeStore,
+      rankings: rankings,
+      progress: progressStore
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    showSaveStatus('Saved');
+  }
+
+  function loadState(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      updateEmptyStates();
+      return;
+    }
+
+    try {
+      const data = JSON.parse(raw);
+      animeStore = data.anime || {};
+      progressStore = data.progress || {};
+      rankingsStore = data.rankings || {};
+
+      Object.values(animeStore).forEach(anime => {
+        const tier = rankingsStore[anime.id] || 'unranked';
+        renderAnime(anime, tier);
+      });
+
+    } catch (err) {
+      console.error('Failed to load storage state:', err);
+    }
+
+    updateEmptyStates();
+  }
+
+  loadState();
+</script>
+
+</body>
+</html>
