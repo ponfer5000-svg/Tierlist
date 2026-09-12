@@ -122,6 +122,11 @@
     font-size:0.85rem;
     align-self:center;
     padding:4px 2px;
+    pointer-events:none;
+  }
+
+  .drop-zone:not(.empty)::before{
+    display:none !important;
   }
 
   .bench{
@@ -649,12 +654,13 @@
     return card;
   }
 
-  function renderAnime(anime, tier = 'unranked') {
-    const card = createAnimeCard(anime);
-    const targetZone = document.querySelector(`.drop-zone[data-tier="${tier}"]`) || document.getElementById('unranked-zone');
-    targetZone.appendChild(card);
-    updateBadge(anime.id);
-  }
+	function renderAnime(anime, tier = 'unranked') {
+		const card = createAnimeCard(anime);
+		const targetZone = document.querySelector(`.drop-zone[data-tier="${tier}"]`) || document.getElementById('unranked-zone');
+		targetZone.appendChild(card);
+		updateBadge(anime.id);
+		updateEmptyStates(); // <-- ADD THIS LINE
+	}
 
   function removeAnime(id) {
     delete animeStore[id];
