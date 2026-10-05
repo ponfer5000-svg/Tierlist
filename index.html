@@ -1,930 +1,494 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anime Tier List &amp; Journey Tracker</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anime Tier List</title>
 <style>
-  :root{
-    --ink: #0e0e16;
-    --panel: #17171f;
-    --card: #1c1c27;
-    --card-border: #2c2c3a;
-    --text: #f1efe6;
-    --muted: #9393a6;
-
-    --s: #ff3b5c;
-    --a: #ff8a3d;
-    --b: #ffd23d;
-    --c: #4cd97b;
-    --d: #3da5ff;
-    --f: #b26bff;
-  }
-
-  *{box-sizing:border-box;}
-
-  body{
-    margin:0;
-    background:
-      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 0) 0 0/22px 22px,
-      var(--ink);
-    color:var(--text);
-    font-family:'Inter',sans-serif;
-    padding:40px 24px 80px;
-  }
-
-  header{
-    max-width:1040px;
-    margin:0 auto 36px;
-  }
-
-  .kicker{
-    font-family:'Archivo Black',sans-serif;
-    font-size:clamp(2rem, 5vw, 3.2rem);
-    letter-spacing:-0.01em;
-    line-height:1;
-    margin:0;
-  }
-  .kicker span{
-    background:linear-gradient(90deg,var(--s),var(--a),var(--b),var(--c),var(--d),var(--f));
-    -webkit-background-clip:text;
-    background-clip:text;
-    color:transparent;
-  }
-  header p{
-    margin:12px 0 0;
-    color:var(--muted);
-    font-size:0.98rem;
-    max-width:520px;
-  }
-
-  .save-status{
-    font-size:0.78rem;
-    color:var(--c);
-    min-height:1.2em;
-    letter-spacing:0.01em;
-  }
-
-  .board{
-    max-width:1040px;
-    margin:0 auto;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-
-  .tier-row{
-    display:flex;
-    min-height:140px;
-    border-radius:10px;
-    overflow:hidden;
-    background:var(--panel);
-    border:1px solid var(--card-border);
-  }
-
-  .tier-label{
-    flex:0 0 92px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-family:'Archivo Black',sans-serif;
-    font-size:2.4rem;
-    color:#12121a;
-  }
-
-  .tier-row[data-tier="S"] .tier-label{background:var(--s);}
-  .tier-row[data-tier="A"] .tier-label{background:var(--a);}
-  .tier-row[data-tier="B"] .tier-label{background:var(--b);}
-  .tier-row[data-tier="C"] .tier-label{background:var(--c);}
-  .tier-row[data-tier="D"] .tier-label{background:var(--d);}
-  .tier-row[data-tier="F"] .tier-label{background:var(--f);}
-
-	.drop-zone{
-		flex:1;
-		display:flex;
-		flex-wrap:wrap;
-		align-content:flex-start;
-		justify-content:flex-start;
-		gap:10px;
-		padding:12px;
-		transition:background 0.15s ease;
-	  }
-
-  .drop-zone.drag-over{
-    background:rgba(255,255,255,0.05);
-  }
-
-  .drop-zone.empty::before{
-    content:attr(data-empty-label);
-    color:var(--muted);
-    font-size:0.85rem;
-    align-self:center;
-    padding:4px 2px;
-    pointer-events:none;
-  }
-
-  .drop-zone:not(.empty)::before{
-    display:none !important;
-  }
-
-  .bench{
-    max-width:1040px;
-    margin:44px auto 0;
-  }
-
-  .bench-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-
-  .bench h2{
-    font-family:'Archivo Black',sans-serif;
-    font-size:1.1rem;
-    margin:0;
-    color:var(--muted);
-    font-weight:400;
-    letter-spacing:0.01em;
-  }
-
-  .btn-primary {
-    background: var(--d);
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: opacity 0.15s ease;
-  }
-
-  .btn-primary:hover {
-    opacity: 0.9;
-  }
-
-  .bench .drop-zone{
-    background:var(--panel);
-    border:1px dashed var(--card-border);
-    border-radius:10px;
-    min-height:140px;
-    padding:14px;
-  }
-
-  .card{
-    width:110px;
-    background:var(--card);
-    border:1px solid var(--card-border);
-    border-radius:8px;
-    padding:6px;
-    cursor:grab;
-    user-select:none;
-    transition:border-color 0.12s ease, transform 0.12s ease;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-  }
-
-  .card:hover{
-    border-color:#454558;
-    transform: translateY(-2px);
-  }
-
-  .card.dragging{
-    opacity:0.35;
-  }
-
-  .card-image{
-    position:relative;
-    width:100%;
-    height:130px;
-    border-radius:6px;
-    overflow:hidden;
-    background:rgba(255,255,255,0.035);
-  }
-
-  .card-image .poster{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    display:block;
-  }
-
-  .card-delete {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 20px;
-    height: 20px;
-    background: rgba(0, 0, 0, 0.7);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    font-size: 0.7rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.12s ease;
-  }
-
-  .card:hover .card-delete {
-    opacity: 1;
-  }
-
-  .card-title{
-    font-size:0.78rem;
-    font-weight:600;
-    line-height:1.2;
-    margin:6px 0 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .card-genre{
-    font-size:0.65rem;
-    color:var(--muted);
-    margin:0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .card-progress{
-    display:block;
-    margin-top:4px;
-    padding:2px 4px;
-    border-radius:4px;
-    font-size:0.6rem;
-    font-weight:600;
-    text-align: center;
-  }
-
-  .card-progress.watching{
-    background:rgba(61,165,255,0.16);
-    color:#8cc6ff;
-  }
-
-  .card-progress.completed{
-    background:rgba(76,217,123,0.16);
-    color:#8fe6ab;
-  }
-
-  @media (max-width:600px){
-    .tier-label{flex-basis:64px; font-size:1.7rem;}
-    .card{width:95px;}
-    .card-image{height:110px;}
-  }
-
-  .modal-overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(8,8,13,0.7);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
-    z-index:100;
-  }
-
-  .modal-overlay[hidden]{
-    display:none;
-  }
-
-  .modal-panel{
-    width:100%;
-    max-width:380px;
-    background:var(--panel);
-    border:1px solid var(--card-border);
-    border-radius:12px;
-    padding:22px;
-  }
-
-  .modal-header{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:12px;
-    margin-bottom:18px;
-  }
-
-  .modal-title{
-    font-size:1.05rem;
-    font-weight:700;
-    line-height:1.3;
-    margin:0;
-  }
-
-  .modal-close{
-    flex:0 0 auto;
-    width:26px;
-    height:26px;
-    border-radius:6px;
-    border:1px solid var(--card-border);
-    background:transparent;
-    color:var(--muted);
-    font-size:0.9rem;
-    cursor:pointer;
-    line-height:1;
-  }
-
-  .modal-close:hover{
-    color:var(--text);
-    border-color:#454558;
-  }
-
-  .field-group{
-    margin-bottom:16px;
-  }
-
-  .field-label{
-    display:block;
-    font-size:0.72rem;
-    color:var(--muted);
-    margin-bottom:7px;
-    letter-spacing:0.01em;
-  }
-
-  .status-toggle{
-    display:flex;
-    gap:8px;
-  }
-
-  .status-toggle button{
-    flex:1;
-    padding:8px 0;
-    border-radius:7px;
-    border:1px solid var(--card-border);
-    background:var(--card);
-    color:var(--muted);
-    font-size:0.82rem;
-    font-weight:600;
-    cursor:pointer;
-    transition:border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
-  }
-
-  .status-toggle button.active[data-status="watching"]{
-    border-color:var(--d);
-    color:#8cc6ff;
-    background:rgba(61,165,255,0.1);
-  }
-
-  .status-toggle button.active[data-status="completed"]{
-    border-color:var(--c);
-    color:#8fe6ab;
-    background:rgba(76,217,123,0.1);
-  }
-
-  .field-row{
-    display:flex;
-    gap:10px;
-  }
-
-  .field-row .field-group{
-    flex:1;
-  }
-
-  .modal-panel input[type="text"],
-  .modal-panel input[type="number"],
-  .modal-panel input[type="date"]{
-    width:100%;
-    background:var(--card);
-    border:1px solid var(--card-border);
-    border-radius:7px;
-    padding:8px 9px;
-    color:var(--text);
-    font-family:'Inter',sans-serif;
-    font-size:0.85rem;
-  }
-
-  .modal-panel input:focus{
-    outline:none;
-    border-color:#454558;
-  }
-
-  .modal-status{
-    font-size:0.75rem;
-    color:var(--c);
-    min-height:1.1em;
-    margin-top:4px;
-  }
-
-  .search-box {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  .search-results {
-    max-height: 220px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .search-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px;
-    background: var(--card);
-    border-radius: 6px;
-    cursor: pointer;
-    border: 1px solid transparent;
-  }
-
-  .search-item:hover {
-    border-color: var(--d);
-  }
-
-  .search-item img {
-    width: 36px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 4px;
-  }
-
-  .search-item-info {
-    flex: 1;
-  }
-
-  .search-item-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin: 0;
-  }
-
-  .search-item-tags {
-    font-size: 0.7rem;
-    color: var(--muted);
-    margin: 2px 0 0;
-  }
+:root{--bg:#f3f1ee;--ink:#1d1d1b;--muted:#6b6a66;--panel:#fff;--field:#ebe8e3;--board:#1a1b17;--line:#000;--hint:#8a897f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121310;--ink:#ecebe6;--muted:#9a9990;--panel:#1f201b;--field:#2b2c26}}
+:root[data-theme="dark"]{--bg:#121310;--ink:#ecebe6;--muted:#9a9990;--panel:#1f201b;--field:#2b2c26}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:24px 16px 48px}
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:20px}
+h1{font-size:1.5rem;margin:0 0 4px;letter-spacing:-.01em}
+p.sub{margin:0;color:var(--muted);font-size:.95rem}
+#status{margin-left:6px;font-size:.85rem}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--ink);color:var(--bg);border:0;border-radius:6px;padding:9px 16px;font-weight:700;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--hint)}
+.btn.danger{background:transparent;color:#d33;border:1px solid #d33}
+.board{background:var(--board);border:2px solid var(--line)}
+.row{display:flex;border-bottom:2px solid var(--line);min-height:96px}
+.row:last-child{border-bottom:0}
+.label{flex:0 0 clamp(64px,12vw,110px);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#2a2a28;border-right:2px solid var(--line);user-select:none}
+.zone{flex:1;display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;padding:6px;min-height:92px;transition:background .12s}
+.zone.over{background:rgba(255,255,255,.08)}
+h2{font-size:1.05rem;margin:28px 0 10px}
+.pool{border:2px dashed var(--hint);border-radius:6px;min-height:150px;position:relative}
+.pool.over{background:rgba(127,127,127,.12)}
+[data-empty]:empty::after{content:attr(data-empty);color:var(--muted);font-size:.9rem;padding:8px}
+.card{width:72px;height:96px;border-radius:4px;position:relative;overflow:hidden;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;flex:0 0 auto;border:1px solid rgba(0,0,0,.5);color:#fff;background:#333}
+.card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none}
+.card span{position:absolute;inset:auto 0 0 0;padding:14px 4px 4px;font-size:.62rem;line-height:1.15;text-align:center;font-weight:700;background:linear-gradient(transparent,rgba(0,0,0,.85));text-shadow:0 1px 2px #000;max-height:100%;overflow:hidden}
+.card.src{opacity:.25}
+.ghost{position:fixed;z-index:99;pointer-events:none;box-shadow:0 8px 20px rgba(0,0,0,.5);transform:rotate(-3deg);opacity:.95}
+.card:focus-visible{outline:2px solid #fff;outline-offset:1px}
+h2.sec{font-size:1.15rem;margin:36px 0 10px}
+.count{color:var(--muted);font-weight:400;font-size:.9rem;margin-left:8px}
+h3.sub2{font-size:.9rem;margin:18px 0 8px;color:var(--muted)}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.cards{display:flex;flex-wrap:wrap;gap:12px}
+.wcard{display:flex;gap:12px;padding:10px;background:var(--panel);border:1px solid var(--hint);border-radius:8px}
+.wcard .card,.pw .card{cursor:pointer;touch-action:auto}
+.info{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;justify-content:space-between}
+.t{font-weight:700;font-size:.92rem;line-height:1.25;background:none;border:0;color:var(--ink);text-align:left;padding:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.stitle{display:block;color:var(--muted);margin:-4px 0 12px;font-size:.82rem}
+.prog{display:flex;align-items:center;gap:6px}
+.prog input{width:58px;text-align:center;padding:6px 4px}
+.of{color:var(--muted);font-size:.9rem;min-width:2.2em}
+.step{width:34px;height:34px;border-radius:6px;border:1px solid var(--hint);background:var(--field);color:var(--ink);font-size:1.1rem;line-height:1;padding:0}
+.meter{height:5px;background:var(--field);border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;background:#7fff7f}
+.pw{display:flex;flex-direction:column;gap:6px;width:72px}
+.mini{font-size:.75rem;padding:6px 8px;border-radius:5px;border:1px solid var(--hint);background:var(--field);color:var(--ink)}
+dialog{background:var(--panel);color:var(--ink);border:1px solid var(--hint);border-radius:8px;padding:18px;width:min(560px,94vw);max-height:88vh;overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+dialog h3{margin:0 0 12px;font-size:1.1rem}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--field);border:1px solid transparent;border-radius:6px;padding:8px 10px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--ink)}
+#results{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.res{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--field);color:var(--ink);border:0;border-radius:6px;padding:8px}
+.res:disabled{opacity:.55;cursor:default}
+.res img{width:48px;height:68px;object-fit:cover;border-radius:3px;flex:none;background:#444}
+.res b{display:block;font-size:.95rem}
+.res small{color:var(--muted)}
+.msg{color:var(--muted);font-size:.9rem;margin:12px 0 0}
+dialog{width:min(580px,94vw);padding:22px}
+.dhero{display:flex;gap:16px;align-items:flex-start;margin-bottom:6px}
+.dhero img{width:96px;height:136px;object-fit:cover;border-radius:6px;flex:none;background:#444;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.dhero h3{margin:0 0 2px;font-size:1.25rem;line-height:1.2}
+.dhero small{color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{background:var(--field);color:var(--ink);border:1px solid transparent;border-radius:999px;padding:5px 12px;font-size:.82rem}
+.chip.on{background:var(--ink);color:var(--bg);font-weight:700}
+section.sec{margin-top:18px;padding-top:14px;border-top:1px solid var(--field)}
+section.sec h4{margin:0 0 10px;font-size:.95rem}
+.tiers{display:flex;gap:6px;flex-wrap:wrap}
+.tpick{width:44px;height:40px;border:0;border-radius:6px;font-weight:700;font-size:1rem;color:#2a2a28}
+.tpick.none{width:auto;padding:0 12px;background:var(--field);color:var(--ink);font-size:.82rem;font-weight:400}
+.tpick.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--ink)}
+.seasons{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.stab{min-width:44px;background:var(--field);color:var(--ink);border:0;border-radius:6px;padding:7px 12px;font-weight:700}
+.stab.on{background:var(--ink);color:var(--bg)}
+.stab.add{background:transparent;border:1px dashed var(--hint);color:var(--muted)}
+.prog{display:flex;align-items:center;gap:12px}
+.step{width:40px;height:40px;border-radius:50%;border:1px solid var(--hint);background:transparent;color:var(--ink);font-size:1.3rem;line-height:1;flex:none}
+.pc{flex:1}
+.ptxt{font-size:.9rem;margin-bottom:6px}
+.meter{height:8px;border-radius:4px;background:var(--field);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7fff7f,#ffdf7f);transition:width .2s}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.grid label,.full{display:block;font-size:.8rem;color:var(--muted)}
+.grid label input{margin-top:3px}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;padding:8px 0 0;font-size:.82rem}
+.bar{display:flex;justify-content:space-between;gap:8px;margin-top:18px}
+.badge{position:absolute;top:4px;left:4px;font-style:normal;font-size:.62rem;font-weight:700;background:rgba(0,0,0,.78);color:#fff;border-radius:3px;padding:1px 5px}
 </style>
 </head>
 <body>
-
-<header>
-  <h1 class="kicker">YOUR <span>ANIME</span> TIER LIST</h1>
-  <p>Drag any show into a tier to rank it. Click "+ Add New" to search and add anime to your list.</p>
-  <p id="save-status" class="save-status"></p>
-</header>
-
-<main class="board">
-  <div class="tier-row" data-tier="S">
-    <div class="tier-label">S</div>
-    <div class="drop-zone" data-tier="S" data-empty-label="Drop your all-time favorites here"></div>
+<main>
+  <div class="head">
+    <div>
+      <h1>Anime tier list</h1>
+      <p class="sub">Drag completed shows between tiers. Click any show to edit its details.<span id="status" aria-live="polite"></span></p>
+    </div>
+    <button class="btn" id="addBtn">Add anime</button>
   </div>
-  <div class="tier-row" data-tier="A">
-    <div class="tier-label">A</div>
-    <div class="drop-zone" data-tier="A" data-empty-label="Drop great shows here"></div>
-  </div>
-  <div class="tier-row" data-tier="B">
-    <div class="tier-label">B</div>
-    <div class="drop-zone" data-tier="B" data-empty-label="Drop good shows here"></div>
-  </div>
-  <div class="tier-row" data-tier="C">
-    <div class="tier-label">C</div>
-    <div class="drop-zone" data-tier="C" data-empty-label="Drop okay shows here"></div>
-  </div>
-  <div class="tier-row" data-tier="D">
-    <div class="tier-label">D</div>
-    <div class="drop-zone" data-tier="D" data-empty-label="Drop weak shows here"></div>
-  </div>
-  <div class="tier-row" data-tier="F">
-    <div class="tier-label">F</div>
-    <div class="drop-zone" data-tier="F" data-empty-label="Drop the ones you regret here"></div>
+  <h2 class="sec">Completed<span class="count" id="nDone"></span></h2>
+  <div class="board" id="board"></div>
+  <h3 class="sub2">Completed, not ranked yet</h3>
+  <div class="zone pool" id="pool" data-empty="Finished shows land here. Drag them onto a tier."></div>
+  <h2 class="sec">Watching<span class="count" id="nWatch"></span></h2>
+  <div class="list" id="watching" data-empty="Nothing in progress. Start something from Plan to watch."></div>
+  <h2 class="sec">Plan to watch<span class="count" id="nPlan"></span></h2>
+  <div class="cards" id="planning" data-empty="Your watchlist is empty. Use Add anime."></div>
+  <div id="holdSec" hidden>
+    <h2 class="sec">On hold and dropped<span class="count" id="nHold"></span></h2>
+    <div class="cards" id="hold"></div>
   </div>
 </main>
 
-<section class="bench">
-  <div class="bench-header">
-    <h2>Unranked shows</h2>
-    <button class="btn-primary" id="btn-open-add">+ Add New</button>
-  </div>
-  <div class="drop-zone" id="unranked-zone" data-tier="unranked" data-empty-label="Nothing left — everything's been ranked"></div>
-</section>
+<dialog id="searchDlg">
+  <h3>Add anime</h3>
+  <input id="q" type="search" placeholder="Search AniList by title" autocomplete="off" aria-label="Search anime">
+  <ul id="results"></ul>
+  <p class="msg" id="searchMsg">Type at least 2 characters to search.</p>
+  <div class="bar"><span></span><button class="btn ghost" id="closeSearch">Close</button></div>
+</dialog>
 
-<!-- Progress Modal -->
-<div class="modal-overlay" id="modal-overlay" hidden>
-  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modal-title">Show title</h2>
-      <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
-    </div>
-
-    <div class="field-group">
-      <span class="field-label">Status</span>
-      <div class="status-toggle">
-        <button type="button" data-status="watching" id="status-watching">Watching</button>
-        <button type="button" data-status="completed" id="status-completed">Completed</button>
-      </div>
-    </div>
-
-    <div class="field-row" id="season-episode-row">
-      <div class="field-group">
-        <label class="field-label" for="input-season">Season</label>
-        <input type="number" id="input-season" min="1" placeholder="1">
-      </div>
-      <div class="field-group">
-        <label class="field-label" for="input-episode">Episode</label>
-        <input type="number" id="input-episode" min="1" placeholder="1">
-      </div>
-    </div>
-
-    <div class="field-row">
-      <div class="field-group">
-        <label class="field-label" for="input-start">Start date</label>
-        <input type="date" id="input-start">
-      </div>
-      <div class="field-group">
-        <label class="field-label" for="input-finish">Finish date</label>
-        <input type="date" id="input-finish">
-      </div>
-    </div>
-
-    <p class="modal-status" id="modal-status"></p>
-  </div>
-</div>
-
-<!-- Search & Add Modal -->
-<div class="modal-overlay" id="add-modal-overlay" hidden>
-  <div class="modal-panel" role="dialog" aria-modal="true">
-    <div class="modal-header">
-      <h2 class="modal-title">Search Anime</h2>
-      <button class="modal-close" id="add-modal-close" aria-label="Close">✕</button>
-    </div>
-
-    <div class="search-box">
-      <input type="text" id="anime-search-input" placeholder="e.g. Naruto, Frieren...">
-      <button class="btn-primary" id="btn-search">Search</button>
-    </div>
-
-    <div class="search-results" id="search-results"></div>
-  </div>
-</div>
+<dialog id="detailDlg">
+  <div class="dhero"><img id="dImg" alt=""><div><h3 id="dTitle"></h3><small id="dMeta"></small><div class="chips" id="statusChips" role="group" aria-label="Status"></div></div></div>
+  <section class="sec"><h4>Tier</h4><div class="tiers" id="tierPick" role="group" aria-label="Tier"></div></section>
+  <section class="sec"><h4>Progress</h4>
+    <div class="seasons" id="seasonTabs" role="group" aria-label="Season"></div>
+    <small class="stitle" id="sTitle"></small>
+    <div class="prog"><button class="step" id="wMinus" aria-label="One episode less">−</button>
+      <div class="pc"><div class="ptxt" id="pTxt"></div><div class="meter"><i id="pFill"></i></div></div>
+      <button class="step" id="wPlus" aria-label="One episode more">+</button></div>
+    <div class="grid"><label>Episodes watched<input id="fWatched" type="number" min="0"></label>
+      <label>Episodes in this season<input id="fTotal" type="number" min="0"></label></div>
+    <button class="linkbtn" id="refresh">Refresh seasons from AniList</button>
+  </section>
+  <section class="sec"><h4>Dates</h4><div class="grid" style="margin-top:0">
+    <label>Started<input id="fStart" type="date"></label><label>Finished<input id="fFinish" type="date"></label></div></section>
+  <section class="sec"><h4>Notes</h4><textarea id="fNotes" rows="3" aria-label="Notes"></textarea></section>
+  <div class="bar"><button class="btn danger" id="removeBtn">Remove</button><button class="btn" id="doneBtn">Done</button></div>
+</dialog>
 
 <script>
-  const STORAGE_KEY = 'anime_tier_list_data';
-  const dropZones = document.querySelectorAll('.drop-zone');
-  
-  let animeStore = {}; 
-  let progressStore = {}; 
-  let rankingsStore = {}; 
+const TIERS=[["S","#ff7f7f"],["A","#ffbf7f"],["B","#ffdf7f"],["C","#ffff7f"],["D","#bfff7f"],["F","#7fff7f"]];
+const KEY="anime-tier-tracker-v2";
+const $=id=>document.getElementById(id);
+const board=$("board"), pool=$("pool"), statusEl=$("status"), watchingEl=$("watching"), planningEl=$("planning"), holdEl=$("hold");
 
-  let draggedCard = null;
-  let suppressClick = false;
-  let activeCardId = null;
+/* ---------- data ---------- */
+// anime: {seasons:[{episodes,watched}], currentSeason, id, anilistId, title, cover, coverUrl, status, episodesWatched, totalEpisodes, tier, startDate, finishDate, notes}
+let state={version:2,anime:[]};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.anime))state=s}catch(e){}
+state.anime.forEach(a=>{if(a.tier&&a.status!=="completed")a.status="completed"}); // ranked shows count as completed
+function ensureSeasons(a){
+  if(!Array.isArray(a.seasons)||!a.seasons.length){a.seasons=[{episodes:a.totalEpisodes??null,watched:a.episodesWatched||0}]}
+  if(!a.currentSeason||a.currentSeason>a.seasons.length)a.currentSeason=1;
+}
+function syncTotals(a){
+  a.episodesWatched=a.seasons.reduce((n,s)=>n+s.watched,0);
+  const known=a.seasons.filter(s=>s.episodes!=null);
+  a.totalEpisodes=known.length?known.reduce((n,s)=>n+s.episodes,0):null;
+}
+state.anime.forEach(ensureSeasons);
+const uid=()=>crypto.randomUUID?crypto.randomUUID():"a"+Date.now().toString(36)+Math.random().toString(36).slice(2,9);
+const byId=id=>state.anime.find(a=>a.id===id);
+let saveTimer=null;
+function save(){
+  clearTimeout(saveTimer);statusEl.textContent=" Saving…";
+  saveTimer=setTimeout(()=>{
+    try{localStorage.setItem(KEY,JSON.stringify(state));statusEl.textContent=" Saved"}
+    catch(e){statusEl.textContent=" Could not save (storage full or blocked)"}
+  },250);
+}
 
-  function initCardEvents(card) {
-    card.addEventListener('dragstart', () => {
-      draggedCard = card;
-      suppressClick = true;
-      card.classList.add('dragging');
-    });
-    
-    card.addEventListener('dragend', () => {
-      card.classList.remove('dragging');
-      draggedCard = null;
-      updateEmptyStates();
-      setTimeout(() => { suppressClick = false; }, 50);
-    });
-    
-    card.addEventListener('click', e => {
-      if (suppressClick || e.target.classList.contains('card-delete')) return;
-      openModal(card.dataset.id);
-    });
-
-    const deleteBtn = card.querySelector('.card-delete');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        removeAnime(card.dataset.id);
-      });
-    }
+/* ---------- board ---------- */
+TIERS.forEach(([t,c])=>{
+  const row=document.createElement("div");row.className="row";
+  row.innerHTML=`<div class="label" style="background:${c}">${t}</div><div class="zone" data-tier="${t}"></div>`;
+  board.appendChild(row);
+});
+const zones=()=>[...document.querySelectorAll(".zone")];
+function makeCard(a,draggable){
+  const el=document.createElement("div");
+  el.className="card";el.tabIndex=0;el.dataset.id=a.id;el.title=a.title;
+  const src=a.cover||a.coverUrl;
+  const n=a.seasons&&a.seasons.length>1?`<em class="badge">S${a.currentSeason}</em>`:"";
+  el.innerHTML=(src?`<img alt="" src="${src}">`:"")+n+`<span></span>`;
+  el.querySelector("span").textContent=a.title;
+  if(draggable)el.addEventListener("pointerdown",startDrag);
+  else el.addEventListener("click",()=>openDetails(a.id));
+  el.addEventListener("keydown",e=>{if(e.key==="Enter")openDetails(a.id)});
+  return el;
+}
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
+function setStatus(a,s){
+  if(a.status===s)return;
+  a.status=s;
+  if(s!=="completed")a.tier=null;
+  if(s==="watching"&&!a.startDate)a.startDate=today();
+  if(s==="completed"){
+    if(a.totalEpisodes)a.episodesWatched=a.totalEpisodes;
+    if(!a.finishDate)a.finishDate=today();
   }
-
-  dropZones.forEach(zone => {
-    zone.addEventListener('dragover', e => {
-      e.preventDefault();
-      zone.classList.add('drag-over');
-    });
-    zone.addEventListener('dragleave', () => {
-      zone.classList.remove('drag-over');
-    });
-    zone.addEventListener('drop', e => {
-      e.preventDefault();
-      zone.classList.remove('drag-over');
-      if (draggedCard) {
-        zone.appendChild(draggedCard);
-        updateEmptyStates();
-        saveState();
-      }
-    });
+}
+function moveTo(a,s){setStatus(a,s);save();render()}
+function setProgress(a,n){
+  n=Math.max(0,n);if(a.totalEpisodes)n=Math.min(n,a.totalEpisodes);
+  a.episodesWatched=n;save();render();
+}
+function mk(tag,cls,txt,fn,label){
+  const e=document.createElement(tag);e.className=cls;if(txt)e.textContent=txt;
+  if(fn)e.onclick=fn;if(label)e.setAttribute("aria-label",label);return e;
+}
+function watchCard(a){
+  const w=mk("div","wcard"), info=mk("div","info"), total=a.totalEpisodes;
+  w.appendChild(makeCard(a,false));
+  const t=mk("button","t",a.title,()=>openDetails(a.id));t.title=a.title;
+  const inp=document.createElement("input");
+  inp.type="number";inp.min=0;inp.value=a.episodesWatched;inp.setAttribute("aria-label","Episodes watched");
+  inp.onchange=()=>setProgress(a,parseInt(inp.value)||0);
+  const prog=mk("div","prog");
+  prog.append(mk("button","step","−",()=>setProgress(a,a.episodesWatched-1),"Previous episode"),inp,
+    mk("span","of","/ "+(total??"?")),mk("button","step","+",()=>setProgress(a,a.episodesWatched+1),"Next episode"));
+  info.append(t,prog);
+  if(total){const m=mk("div","meter"),i=document.createElement("i");i.style.width=Math.min(100,a.episodesWatched/total*100)+"%";m.appendChild(i);info.appendChild(m)}
+  if(total&&a.episodesWatched>=total)info.appendChild(mk("button","mini","Mark completed",()=>moveTo(a,"completed")));
+  w.appendChild(info);return w;
+}
+function listCard(a){
+  const w=mk("div","pw");w.appendChild(makeCard(a,false));
+  if(a.status==="plan")w.appendChild(mk("button","mini","Start",()=>moveTo(a,"watching")));
+  if(a.status==="paused")w.appendChild(mk("button","mini","Resume",()=>moveTo(a,"watching")));
+  return w;
+}
+function render(){
+  zones().forEach(z=>z.replaceChildren());
+  [watchingEl,planningEl,holdEl].forEach(e=>e.replaceChildren());
+  const n={done:0,watch:0,plan:0,hold:0};
+  state.anime.forEach(a=>{
+    if(a.status==="completed"){
+      n.done++;
+      const z=a.tier?document.querySelector(`.zone[data-tier="${a.tier}"]`):null;
+      (z||pool).appendChild(makeCard(a,true));
+    }else if(a.status==="watching"){n.watch++;watchingEl.appendChild(watchCard(a))}
+    else if(a.status==="plan"){n.plan++;planningEl.appendChild(listCard(a))}
+    else{n.hold++;holdEl.appendChild(listCard(a))}
   });
+  $("nDone").textContent=n.done;$("nWatch").textContent=n.watch;$("nPlan").textContent=n.plan;$("nHold").textContent=n.hold;
+  $("holdSec").hidden=!n.hold;
+}
+function syncFromDom(){
+  const order=[];
+  zones().forEach(z=>z.querySelectorAll(".card").forEach(c=>{
+    const a=byId(c.dataset.id);if(!a)return;
+    a.tier=z.dataset.tier||null;order.push(a);
+  }));
+  state.anime=[...state.anime.filter(a=>a.status!=="completed"),...order];save();
+}
 
-  function updateEmptyStates(){
-    dropZones.forEach(zone => {
-      zone.classList.toggle('empty', zone.children.length === 0);
+/* ---------- drag and drop (pointer based; click opens details) ---------- */
+let drag=null;
+function startDrag(e){
+  if(e.button>0)return;
+  const card=e.currentTarget;
+  drag={card,x:e.clientX,y:e.clientY,ghost:null};
+  card.setPointerCapture(e.pointerId);
+  card.addEventListener("pointermove",moveDrag);
+  card.addEventListener("pointerup",endDrag);
+  card.addEventListener("pointercancel",endDrag);
+}
+function moveDrag(e){
+  if(!drag)return;
+  if(!drag.ghost){
+    if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<5)return;
+    const g=drag.card.cloneNode(true);g.className="card ghost";
+    g.style.left=g.style.top="0";document.body.appendChild(g);
+    drag.ghost=g;drag.card.classList.add("src");
+  }
+  drag.ghost.style.left=(e.clientX-36)+"px";drag.ghost.style.top=(e.clientY-48)+"px";
+  const z=zoneAt(e);zones().forEach(el=>el.classList.toggle("over",el===z));
+}
+const zoneAt=e=>{const t=document.elementFromPoint(e.clientX,e.clientY);return t?t.closest(".zone"):null};
+function endDrag(e){
+  if(!drag)return;
+  const {card,ghost}=drag;
+  card.removeEventListener("pointermove",moveDrag);
+  card.removeEventListener("pointerup",endDrag);
+  card.removeEventListener("pointercancel",endDrag);
+  if(!ghost){ if(e.type==="pointerup")openDetails(card.dataset.id); drag=null; return; }
+  const z=e.type==="pointerup"?zoneAt(e):null;
+  if(z){
+    const next=[...z.querySelectorAll(".card")].find(c=>{
+      if(c===card)return false;
+      const r=c.getBoundingClientRect();
+      return e.clientY<r.bottom&&(e.clientY<r.top||e.clientX<r.left+r.width/2);
     });
+    z.insertBefore(card,next||null);
+    syncFromDom();
   }
+  ghost.remove();card.classList.remove("src");
+  zones().forEach(el=>el.classList.remove("over"));
+  drag=null;
+}
 
-  function createAnimeCard(anime) {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.draggable = true;
-    card.dataset.id = anime.id;
+/* ---------- AniList search ---------- */
+const searchDlg=$("searchDlg"), q=$("q"), results=$("results"), msg=$("searchMsg");
+const QUERY=`query($s:String){Page(perPage:12){media(search:$s,type:ANIME,sort:SEARCH_MATCH){
+id title{romaji english} format seasonYear episodes
+startDate{year month day} endDate{year month day} coverImage{medium large}}}}`;
+const FORMATS={TV:"TV",TV_SHORT:"TV short",MOVIE:"Movie",SPECIAL:"Special",OVA:"OVA",ONA:"ONA",MUSIC:"Music"};
+const pad=n=>String(n).padStart(2,"0");
+const dateStr=d=>d&&d.year&&d.month&&d.day?`${d.year}-${pad(d.month)}-${pad(d.day)}`:"";
+let searchTimer=null, searchSeq=0;
 
-    card.innerHTML = `
-      <div class="card-image">
-        <img class="poster" src="${anime.image}" alt="${anime.title}">
-        <button class="card-delete" title="Remove Anime">✕</button>
-      </div>
-      <p class="card-title" title="${anime.title}">${anime.title}</p>
-      <p class="card-genre" title="${anime.genres}">${anime.genres}</p>
-      <p class="card-progress" hidden></p>
-    `;
-
-    initCardEvents(card);
-    return card;
+$("addBtn").onclick=()=>{searchDlg.showModal();q.focus()};
+$("closeSearch").onclick=()=>searchDlg.close();
+q.addEventListener("input",()=>{
+  clearTimeout(searchTimer);
+  const s=q.value.trim();
+  if(s.length<2){results.replaceChildren();msg.textContent="Type at least 2 characters to search.";return}
+  msg.textContent="Searching…";
+  searchTimer=setTimeout(()=>search(s),350);
+});
+async function search(s){
+  const seq=++searchSeq;
+  try{
+    const r=await fetch("https://graphql.anilist.co",{method:"POST",
+      headers:{"Content-Type":"application/json",Accept:"application/json"},
+      body:JSON.stringify({query:QUERY,variables:{s}})});
+    if(!r.ok)throw new Error(r.status===429?"AniList rate limit reached. Wait a moment and try again.":"AniList returned an error ("+r.status+").");
+    const media=(await r.json()).data.Page.media;
+    if(seq!==searchSeq)return;
+    showResults(media);
+  }catch(err){
+    if(seq!==searchSeq)return;
+    results.replaceChildren();
+    msg.textContent=err instanceof TypeError?"Could not reach AniList. Check your connection, and open this file in a normal browser tab.":err.message;
   }
-
-	function renderAnime(anime, tier = 'unranked') {
-		const card = createAnimeCard(anime);
-		const targetZone = document.querySelector(`.drop-zone[data-tier="${tier}"]`) || document.getElementById('unranked-zone');
-		targetZone.appendChild(card);
-		updateBadge(anime.id);
-		updateEmptyStates(); // <-- ADD THIS LINE
-	}
-
-  function removeAnime(id) {
-    delete animeStore[id];
-    delete progressStore[id];
-    delete rankingsStore[id];
-    const card = document.querySelector(`.card[data-id="${id}"]`);
-    if (card) card.remove();
-    updateEmptyStates();
-    saveState();
-  }
-
-  const addModalOverlay = document.getElementById('add-modal-overlay');
-  const searchInput = document.getElementById('anime-search-input');
-  const searchResults = document.getElementById('search-results');
-
-  document.getElementById('btn-open-add').addEventListener('click', () => {
-    addModalOverlay.hidden = false;
-    searchInput.focus();
+}
+function showResults(media){
+  results.replaceChildren();
+  msg.textContent=media.length?"":"No anime found.";
+  media.forEach(m=>{
+    const title=m.title.english||m.title.romaji;
+    const year=m.seasonYear||(m.startDate&&m.startDate.year)||"Unknown year";
+    const have=state.anime.some(a=>a.anilistId===m.id||(a.seasons||[]).some(x=>x.anilistId===m.id));
+    const li=document.createElement("li"),b=document.createElement("button");
+    b.className="res";b.disabled=have;
+    b.innerHTML=`<img alt="" src="${m.coverImage.medium||""}"><div><b></b><small></small></div>`;
+    b.querySelector("b").textContent=title;
+    b.querySelector("small").textContent=`${FORMATS[m.format]||m.format||"Unknown"} · ${year}${have?" · In your collection":""}`;
+    b.onclick=()=>addAnime(m,b);
+    li.appendChild(b);results.appendChild(li);
   });
-
-  document.getElementById('add-modal-close').addEventListener('click', () => {
-    addModalOverlay.hidden = true;
-  });
-
-  document.getElementById('btn-search').addEventListener('click', executeSearch);
-  searchInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') executeSearch();
-  });
-
-  async function executeSearch() {
-    const query = searchInput.value.trim();
-    if (!query) return;
-
-    searchResults.innerHTML = '<p style="font-size:0.8rem; color:var(--muted);">Searching API...</p>';
-
-    try {
-      const res = await fetch(`https://kitsu.io/api/edge/anime?filter[text]=${encodeURIComponent(query)}&page[limit]=5`);
-      const data = await res.json();
-      
-      searchResults.innerHTML = '';
-      if (!data.data || data.data.length === 0) {
-        searchResults.innerHTML = '<p style="font-size:0.8rem; color:var(--muted);">No results found.</p>';
-        return;
-      }
-
-      for (const anime of data.data) {
-        const title = anime.attributes.canonicalTitle || anime.attributes.titles.en || 'Unknown Title';
-        const poster = anime.attributes.posterImage?.small || anime.attributes.posterImage?.original || '';
-        
-        let genres = 'Anime';
-        try {
-          if (anime.relationships?.categories?.links?.related) {
-            const catRes = await fetch(anime.relationships.categories.links.related);
-            const catData = await catRes.json();
-            if (catData.data && catData.data.length) {
-              genres = catData.data.slice(0, 3).map(c => c.attributes.title).join(', ');
-            }
-          }
-        } catch (e) {
-          // Fallback if category fetching fails
-        }
-
-        const item = document.createElement('div');
-        item.className = 'search-item';
-
-        item.innerHTML = `
-          <img src="${poster}" alt="${title}">
-          <div class="search-item-info">
-            <p class="search-item-title">${title}</p>
-            <p class="search-item-tags">${genres}</p>
-          </div>
-        `;
-
-        item.addEventListener('click', () => {
-          const animeObj = {
-            id: 'kitsu_' + anime.id,
-            title: title,
-            image: poster,
-            genres: genres
-          };
-
-          if (!animeStore[animeObj.id]) {
-            animeStore[animeObj.id] = animeObj;
-            renderAnime(animeObj, 'unranked');
-            saveState();
-          }
-
-          addModalOverlay.hidden = true;
-          searchInput.value = '';
-          searchResults.innerHTML = '';
-        });
-
-        searchResults.appendChild(item);
-      }
-
-    } catch (err) {
-      console.error(err);
-      searchResults.innerHTML = '<p style="font-size:0.8rem; color:var(--s);">Error fetching data from API.</p>';
-    }
-  }
-
-  const overlay = document.getElementById('modal-overlay');
-  const modalTitle = document.getElementById('modal-title');
-  const statusButtons = {
-    watching: document.getElementById('status-watching'),
-    completed: document.getElementById('status-completed'),
+}
+async function toDataUrl(url){ // cache the cover locally so it persists even if the CDN is unreachable
+  try{
+    const blob=await (await fetch(url)).blob();
+    return await new Promise((res,rej)=>{const f=new FileReader();f.onload=()=>res(f.result);f.onerror=rej;f.readAsDataURL(blob)});
+  }catch(e){return ""}
+}
+async function addAnime(m,btn){
+  btn.disabled=true;btn.querySelector("small").textContent="Checking seasons…";
+  let chain=null;try{chain=await fetchSeasonChain(m.id)}catch(e){}
+  const src=chain?chain.root:m, title=src.title.english||src.title.romaji;
+  const coverUrl=src.coverImage.large||src.coverImage.medium||"";
+  const cover=await toDataUrl(src.coverImage.medium||coverUrl);
+  const a={
+    id:uid(),anilistId:src.id,title,cover,coverUrl,status:"plan",episodesWatched:0,totalEpisodes:null,
+    tier:null,startDate:"",finishDate:"",notes:"",
+    seasons:chain?chain.seasons.map(x=>({...x,watched:0})):[{anilistId:m.id,title,episodes:m.episodes||null,watched:0}],
+    currentSeason:chain?chain.currentIndex+1:1,seasonsSynced:!!chain
   };
-  const seasonInput = document.getElementById('input-season');
-  const episodeInput = document.getElementById('input-episode');
-  const startInput = document.getElementById('input-start');
-  const finishInput = document.getElementById('input-finish');
-  const seasonEpisodeRow = document.getElementById('season-episode-row');
+  syncTotals(a);state.anime.push(a);
+  render();save();searchDlg.close();
+}
 
-  function getProgress(cardId){
-    return progressStore[cardId] || { status: null, season: '', episode: '', start: '', finish: '' };
+/* ---------- seasons from AniList ---------- */
+const NODE=`id type format episodes seasonYear title{romaji english} startDate{year month day} coverImage{medium large}
+relations{edges{relationType node{id type}}}`;
+async function gql(query,variables){
+  const r=await fetch("https://graphql.anilist.co",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({query,variables})});
+  if(!r.ok)throw new Error(r.status===429?"AniList rate limit reached. Wait a moment and try again.":"AniList returned an error ("+r.status+").");
+  return (await r.json()).data;
+}
+// Follows SEQUEL/PREQUEL links in both directions, then keeps TV entries as seasons.
+async function fetchSeasonChain(startId){
+  const seen=new Map();let frontier=[startId];
+  while(frontier.length&&seen.size<30){
+    const d=await gql(`query($ids:[Int]){Page(perPage:50){media(id_in:$ids){${NODE}}}}`,{ids:frontier.slice(0,30-seen.size)});
+    frontier=[];
+    d.Page.media.forEach(m=>seen.set(m.id,m));
+    d.Page.media.forEach(m=>m.relations.edges.forEach(e=>{
+      if((e.relationType==="SEQUEL"||e.relationType==="PREQUEL")&&e.node.type==="ANIME"&&!seen.has(e.node.id)&&!frontier.includes(e.node.id))frontier.push(e.node.id);
+    }));
   }
-
-  function openModal(cardId){
-    activeCardId = cardId;
-    const anime = animeStore[cardId];
-    if (!anime) return;
-    
-    const progress = getProgress(cardId);
-
-    modalTitle.textContent = anime.title;
-    setActiveStatus(progress.status);
-    seasonInput.value = progress.season || '';
-    episodeInput.value = progress.episode || '';
-    startInput.value = progress.start || '';
-    finishInput.value = progress.finish || '';
-
-    overlay.hidden = false;
-  }
-
-  function closeModal(){
-    overlay.hidden = true;
-    activeCardId = null;
-  }
-
-  function setActiveStatus(status){
-    Object.entries(statusButtons).forEach(([key, btn]) => {
-      btn.classList.toggle('active', key === status);
-    });
-    seasonEpisodeRow.hidden = status === 'completed';
-  }
-
-  function updateActiveProgress(patch){
-    if (!activeCardId) return;
-    const current = getProgress(activeCardId);
-    progressStore[activeCardId] = { ...current, ...patch };
-    updateBadge(activeCardId);
-    saveState();
-  }
-
-  statusButtons.watching.addEventListener('click', () => {
-    const current = getProgress(activeCardId).status;
-    const next = current === 'watching' ? null : 'watching';
-    setActiveStatus(next);
-    updateActiveProgress({ status: next });
+  const key=m=>{const d=m.startDate||{};return d.year?d.year*10000+(d.month||0)*100+(d.day||0):99999999};
+  let nodes=[...seen.values()].filter(m=>m.format==="TV"||m.format==="TV_SHORT"||m.id===startId).sort((a,b)=>key(a)-key(b)||a.id-b.id);
+  if(!nodes.length)nodes=[seen.get(startId)];
+  const seasons=nodes.map(m=>({anilistId:m.id,title:m.title.english||m.title.romaji,episodes:m.episodes||null}));
+  return {seasons,root:nodes[0],currentIndex:Math.max(0,nodes.findIndex(m=>m.id===startId))};
+}
+async function syncSeasons(a){
+  const chain=await fetchSeasonChain(a.anilistId);
+  const old=a.seasons,prevId=old[a.currentSeason-1]&&old[a.currentSeason-1].anilistId;
+  a.seasons=chain.seasons.map((n,i)=>{
+    const o=old.find(x=>x.anilistId===n.anilistId)||(old[i]&&!old[i].anilistId?old[i]:null);
+    const w=o?o.watched:0;
+    return {...n,watched:n.episodes!=null?Math.min(w,n.episodes):w};
   });
+  const idx=a.seasons.findIndex(x=>x.anilistId===prevId);
+  a.currentSeason=idx>=0?idx+1:Math.min(a.currentSeason,a.seasons.length);
+  a.seasonsSynced=true;syncTotals(a);save();
+}
 
-  statusButtons.completed.addEventListener('click', () => {
-    const current = getProgress(activeCardId).status;
-    const next = current === 'completed' ? null : 'completed';
-    setActiveStatus(next);
-    updateActiveProgress({ status: next });
-  });
-
-  seasonInput.addEventListener('input', () => updateActiveProgress({ season: seasonInput.value }));
-  episodeInput.addEventListener('input', () => updateActiveProgress({ episode: episodeInput.value }));
-  startInput.addEventListener('change', () => updateActiveProgress({ start: startInput.value }));
-  finishInput.addEventListener('change', () => updateActiveProgress({ finish: finishInput.value }));
-
-  document.getElementById('modal-close').addEventListener('click', closeModal);
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) closeModal();
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      if (!overlay.hidden) closeModal();
-      if (!addModalOverlay.hidden) addModalOverlay.hidden = true;
-    }
-  });
-
-  function updateBadge(cardId){
-    const card = document.querySelector('.card[data-id="' + cardId + '"]');
-    if (!card) return;
-    const badge = card.querySelector('.card-progress');
-    const progress = getProgress(cardId);
-
-    if (!progress.status) {
-      badge.hidden = true;
-      badge.textContent = '';
-      badge.classList.remove('watching', 'completed');
-      return;
-    }
-
-    const label = progress.status === 'watching' ? 'Watching' : 'Completed';
-    let text = label;
-    if (progress.status === 'watching' && (progress.season || progress.episode)) {
-      const s = progress.season || '1';
-      const e = progress.episode || '?';
-      text = `S${s} E${e}`;
-    }
-
-    badge.textContent = text;
-    badge.hidden = false;
-    badge.classList.toggle('watching', progress.status === 'watching');
-    badge.classList.toggle('completed', progress.status === 'completed');
+/* ---------- details ---------- */
+const detailDlg=$("detailDlg"); let cur=null;
+const STATUSES=[["plan","Plan to watch"],["watching","Watching"],["completed","Completed"],["paused","On hold"],["dropped","Dropped"]];
+function renderDetail(){
+  const a=cur, s=a.seasons[a.currentSeason-1];
+  $("dImg").src=a.cover||a.coverUrl;
+  $("dTitle").textContent=a.title;
+  $("dMeta").textContent=a.anilistId?"AniList #"+a.anilistId:"";
+  $("statusChips").replaceChildren(...STATUSES.map(([v,l])=>{
+    const b=document.createElement("button");b.className="chip"+(a.status===v?" on":"");b.textContent=l;b.setAttribute("aria-pressed",a.status===v);
+    b.onclick=()=>{a.status=v;save();renderDetail()};return b}));
+  const none=document.createElement("button");none.className="tpick none"+(a.tier?"":" on");none.textContent="Unranked";
+  none.onclick=()=>{a.tier=null;save();renderDetail()};
+  $("tierPick").replaceChildren(none,...TIERS.map(([t,c])=>{
+    const b=document.createElement("button");b.className="tpick"+(a.tier===t?" on":"");b.style.background=c;b.textContent=t;
+    b.onclick=()=>{a.tier=t;save();renderDetail()};return b}));
+  const tabs=a.seasons.map((sn,i)=>{
+    const b=document.createElement("button");b.className="stab"+(i+1===a.currentSeason?" on":"");b.textContent="S"+(i+1);
+    b.setAttribute("aria-label","Season "+(i+1));b.title=sn.title||"";b.onclick=()=>{a.currentSeason=i+1;save();renderDetail()};return b});
+  $("seasonTabs").replaceChildren(...tabs);
+  const pct=s.episodes?Math.min(100,Math.round(s.watched/s.episodes*100)):0;
+  $("pTxt").textContent=`Season ${a.currentSeason}: ${s.watched} of ${s.episodes??"?"} episodes`;
+  $("pFill").style.width=pct+"%";
+  $("fWatched").value=s.watched;$("fTotal").value=s.episodes??"";
+  const multi=a.seasons.length>1;
+  $("seasonTabs").hidden=!multi;$("sTitle").hidden=!multi;$("sTitle").textContent=s.title||"";
+  $("fTotal").disabled=!!(s.anilistId&&s.episodes!=null);
+  $("fStart").value=a.startDate;$("fFinish").value=a.finishDate;$("fNotes").value=a.notes;
+}
+function openDetails(id){
+  cur=byId(id);if(!cur)return;ensureSeasons(cur);renderDetail();detailDlg.showModal();
+  if(cur.anilistId&&!cur.seasonsSynced){
+    const a=cur;$("sTitle").hidden=false;$("sTitle").textContent="Checking seasons on AniList…";
+    syncSeasons(a).then(()=>{if(cur===a)renderDetail()}).catch(()=>{if(cur===a){renderDetail();$("sTitle").hidden=false;$("sTitle").textContent="Could not check seasons. Try Refresh later."}});
   }
+}
+const curSeason=()=>cur.seasons[cur.currentSeason-1];
+function setWatched(n){const s=curSeason();n=Math.max(0,n);if(s.episodes!=null)n=Math.min(n,s.episodes);s.watched=n;syncTotals(cur);save();renderDetail()}
+$("wMinus").onclick=()=>setWatched(curSeason().watched-1);
+$("wPlus").onclick=()=>setWatched(curSeason().watched+1);
+$("fWatched").addEventListener("change",e=>setWatched(parseInt(e.target.value)||0));
+$("fTotal").addEventListener("change",e=>{
+  const s=curSeason(),v=e.target.value;
+  s.episodes=v===""?null:Math.max(0,parseInt(v)||0);
+  if(s.episodes!=null&&s.watched>s.episodes)s.watched=s.episodes;
+  syncTotals(cur);save();renderDetail();
+});
+$("refresh").onclick=async()=>{
+  const a=cur;if(!a||!a.anilistId)return;
+  $("sTitle").hidden=false;$("sTitle").textContent="Refreshing from AniList…";
+  try{await syncSeasons(a)}catch(e){$("sTitle").textContent=e.message||"Could not reach AniList.";return}
+  if(cur===a)renderDetail();
+};
+function readForm(){
+  if(!cur)return;
+  cur.startDate=$("fStart").value;cur.finishDate=$("fFinish").value;cur.notes=$("fNotes").value;save();
+}
+["fStart","fFinish"].forEach(i=>$(i).addEventListener("change",readForm));
+$("fNotes").addEventListener("input",readForm);
+$("doneBtn").onclick=()=>detailDlg.close();
+detailDlg.addEventListener("close",()=>{readForm();cur=null;render()});
+$("removeBtn").onclick=()=>{
+  if(!cur||!confirm(`Remove "${cur.title}" from your collection?`))return;
+  state.anime=state.anime.filter(a=>a!==cur);cur=null;save();detailDlg.close();
+};
 
-  function showSaveStatus(text){
-    const el = document.getElementById('save-status');
-    if (!el) return;
-    el.textContent = text;
-    setTimeout(() => { if (el.textContent === text) el.textContent = ''; }, 1500);
-  }
-
-  function saveState(){
-    const rankings = {};
-    dropZones.forEach(zone => {
-      const tier = zone.dataset.tier;
-      zone.querySelectorAll('.card').forEach(card => {
-        rankings[card.dataset.id] = tier;
-      });
-    });
-
-    const payload = {
-      anime: animeStore,
-      rankings: rankings,
-      progress: progressStore
-    };
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    showSaveStatus('Saved');
-  }
-
-  function loadState(){
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      updateEmptyStates();
-      return;
-    }
-
-    try {
-      const data = JSON.parse(raw);
-      animeStore = data.anime || {};
-      progressStore = data.progress || {};
-      rankingsStore = data.rankings || {};
-
-      Object.values(animeStore).forEach(anime => {
-        const tier = rankingsStore[anime.id] || 'unranked';
-        renderAnime(anime, tier);
-      });
-
-    } catch (err) {
-      console.error('Failed to load storage state:', err);
-    }
-
-    updateEmptyStates();
-  }
-
-  loadState();
+render();
 </script>
-
 </body>
 </html>
